@@ -1,0 +1,22 @@
+{
+  "name": "rc-pairing",
+  "version": "1.0.0",
+  "description": "Recurse Center 2nd interview pairing exercise",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "chai": "^3.4.0",
+    "connect": "^3.4.0",
+    "observable-store": "0.0.5",
+    "supertest": "^1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "mocha",
+    "start": "node server.js"
+  },
+  "author": "Pauli Price",
+  "license": "MIT"
+}
