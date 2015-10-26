@@ -2,108 +2,110 @@
 
 /*jshint -W069 */
 'use strict';
+(function() {
 
-var http = require('http');
-var url = require('url') ;
-var isObject = require('util').isObject;
-var cache = {};
+  var http = require('http');
+  var url = require('url') ;
+  var isObject = require('util').isObject;
+  var pair = {};
 
-module.exports = function () {
-  // copied from node util - indicated private
-  // var extend = require('util')._extend;
-  function extend(origin, add) {
-    // Don't do anything if add isn't an object
-    if (!add || !isObject(add)) {return origin;}
+  module.exports = pair.server = function () {
+    var cache = {};
+    var server;
 
-    var keys = Object.keys(add);
-    var i = keys.length;
-    while (i--) {
-      origin[keys[i]] = add[keys[i]];
-    }
-    return origin;
-  }
 
-  function propCount(obj) {
-    var count = 0;
-    for (var k in obj) {
-      if (obj.hasOwnProperty(k)) {
-         ++count;
+    // copied from node util - indicated private
+    // var extend = require('util')._extend;
+    function extend(origin, add) {
+      // Don't do anything if add isn't an object
+      if (!add || !isObject(add)) {return origin;}
+      var keys = Object.keys(add);
+      var i = keys.length;
+      while (i--) {
+        origin[keys[i]] = add[keys[i]];
       }
+      return origin;
     }
-    return count;
-  }
 
-  function badRequest(res) {
-    res.writeHead(400);
-    res.end('Bad Request');
-  }
-
-  function notFound(res) {
-    res.writeHead(404);
-    res.end('Not Found');
-  }
-
-  function getValue(res, key) {
-    res.writeHead(200);
-    res.end(cache[key]);
-  }
-
-  function setValue(res, query) {
-    cache = extend(cache, query); 
-    res.writeHead(200);
-    res.end('Ok');
-  }
-//Object.getOwnPropertyNames(json).length
-  // extra validations for get requests
-  function isValidGetRequest(res, query) {
-    if (!query.hasOwnProperty('key')) { 
-      // query string missing required param
-      badRequest(res);
-      return false;
+    function propCount(obj) {
+      return Object.getOwnPropertyNames(obj).length;
     }
-    if ( !cache.hasOwnProperty( query['key']) ) {
-      notFound(res);
-      return false;
+
+    function badRequest(res) {
+      res.writeHead(400);
+      res.end('Bad Request');
     }
-    return true;
-  }
 
-  // validations in common for get & set
-  function isValidRequest(res, urlObject) {
-    if (urlObject.pathname.length !== 4) {
-      badRequest(res);
-      return false;
-    } else if ( propCount(urlObject.query) !== 1) {
-      // /set and /get each require a single query parm
-      badRequest(res);
-      return false;
+    function notFound(res) {
+      res.writeHead(404);
+      res.end('Not Found');
     }
-    return true;
-  }
 
-  function requestListener(req, res) {
-    var urlObject = url.parse(req.url.toLowerCase(),true,true);
-    //console.log(urlObject);
+    function getValue(res, key) {
+      res.writeHead(200);
+      res.end(cache[key]);
+    }
 
-    if (isValidRequest(res, urlObject)){
-      if (urlObject.pathname === '/set') {
-        setValue(res, urlObject.query);
+    function setValue(res, query) {
+      cache = extend(cache, query);
+      res.writeHead(200);
+      res.end('OK');
+    }
+    // extra validations for get requests
+    function isValidGetRequest(res, query) {
+      if (!query.hasOwnProperty('key')) {
+        // query string missing required param
+        badRequest(res);
+        return false;
       }
+      if ( !cache.hasOwnProperty( query['key']) ) {
+        notFound(res);
+        return false;
+      }
+      return true;
+    }
 
-      if (urlObject.pathname === '/get') {
-        if (isValidGetRequest(res, urlObject.query)) {
-          getValue(res, urlObject.query['key']);
+    // validations in common for get & set
+    function isValidRequest(res, urlObject) {
+      if (urlObject.pathname.length !== 4) {
+        badRequest(res);
+        return false;
+      } else if ( propCount(urlObject.query) !== 1) {
+        // /set and /get each require a single query parm
+        badRequest(res);
+        return false;
+      }
+      return true;
+    }
+
+    function requestListener(req, res) {
+      var urlObject = url.parse(req.url.toLowerCase(),true,true);
+
+      if (isValidRequest(res, urlObject)){
+        if (urlObject.pathname === '/set') {
+          setValue(res, urlObject.query);
         }
+
+        if (urlObject.pathname === '/get') {
+          if (isValidGetRequest(res, urlObject.query)) {
+            getValue(res, urlObject.query['key']);
+          }
+        }
+
       }
-
     }
+
+    server = http.createServer(requestListener).listen(4000, function() {
+          console.log('server listening at http://localhost:4000');
+    });
+  };
+
+  if (!module.parent) {
+    pair.server();
   }
+})();
 
-  return http.createServer(requestListener).listen(4000, function() {
-      console.log('server listening on localhost on port 4000');
-  });
 
-};
 //Database server
 //
 //Before your interview, write a program that runs a server 

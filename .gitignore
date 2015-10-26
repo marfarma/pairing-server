@@ -12,3 +12,5 @@ email-templates.txt
 goals.md
 learned.md
 node_modules/
+/cache.json
+/app/alt.js
